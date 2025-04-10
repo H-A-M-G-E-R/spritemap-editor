@@ -172,6 +172,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 gfx_addr = int(self.extractDialog.genericGFXAddrInput.text(), 16)
                 gfx_size = self.extractDialog.genericGFXSizeInput.value()
                 gfx_offset = self.extractDialog.genericGFXOffsetInput.value()
+                compressed_gfx = self.extractDialog.genericCompressedGFXCheckBox.checkState() == QtCore.Qt.Checked
                 pal_addr = int(self.extractDialog.genericPalAddrInput.text(), 16)
                 pal_count = self.extractDialog.genericPalCountInput.value()
                 pal_offset = self.extractDialog.genericPalOffsetInput.value()
@@ -182,18 +183,18 @@ class MainWindow(QtWidgets.QMainWindow):
                     spritemap_end = int(self.extractDialog.genericSpritemapEndInput.text(), 16)
                 name = self.extractDialog.genericNameInput.text()
 
-                self.data = extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, spritemap_start, name, spritemap_end)
+                self.data = extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, spritemap_start, name, spritemap_end, compressed_gfx)
 
-        self.stackedWidget.setCurrentIndex(0)
         self.updateDataTree()
+        self.stackedWidget.setCurrentIndex(0)
         self.spritemapEditor.loadData(self.data)
 
     def openFile(self):
         fileName = QtWidgets.QFileDialog.getOpenFileName(self, filter='JSON files (*.json)')[0]
         if fileName != '':
             self.data = json.load(open(fileName, 'r'))
-            self.stackedWidget.setCurrentIndex(0)
             self.updateDataTree()
+            self.stackedWidget.setCurrentIndex(0)
             self.spritemapEditor.loadData(self.data)
             self.fileNameToSave = fileName
 

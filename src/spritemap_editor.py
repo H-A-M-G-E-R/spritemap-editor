@@ -292,7 +292,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         self.spritemapScene = SpritemapScene(self)
         self.spritemapScene.selectionChanged.connect(self.spritemapSceneSelectionChanged)
         self.spritemapView = SpritemapView(self.spritemapScene)
-        self.spritemapView.setSceneRect(-64, -64, 128, 128)
+        self.spritemapView.setSceneRect(-256, -128, 512, 256)
         self.spritemapView.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
 
         newSpriteButton = QtWidgets.QPushButton('New')
@@ -320,8 +320,8 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
 
         self.tileSelectorScene = TileSelectorScene(self)
         self.tileSelectorView = QtWidgets.QGraphicsView(self.tileSelectorScene)
-        self.tileSelectorView.setSceneRect(0, 0, 16*8, 2*8)
-        self.tileSelectorView.setFixedSize(16*8*4+6, 2*8*4+6)
+        self.tileSelectorView.setSceneRect(0, 0, 16*8, 1*8)
+        self.tileSelectorView.setFixedSize(16*8*4+6, 1*8*4+6)
         self.tileSelectorView.scale(4, 4)
         self.tileSelectorImage = None
         self.tileSelectorPixmap = QtWidgets.QGraphicsPixmapItem()
@@ -526,7 +526,8 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         self.tileSelectorImage = to_qimage(canvas, self.data['palette'], 0, 0, 16*8, (tileCount-1)//16*8+8)
         self.tileSelectorPixmap.setPixmap(QtGui.QPixmap.fromImage(self.tileSelectorImage))
         self.tileSelectorView.setSceneRect(0, 0, 16*8, (tileCount-1)//16*8+8)
-        self.tileSelectorView.setFixedSize(16*8*4+6, ((tileCount-1)//16*8+8)*4+6)
+        #self.tileSelectorView.setFixedSize(16*8*4+6, ((tileCount-1)//16*8+8)*4+6)
+        self.tileSelectorView.setMaximumHeight(((tileCount-1)//16*8+8)*4+6)
 
     def loadTilesClicked(self):
         if self.tileSelectorImage != None:

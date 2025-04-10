@@ -24,6 +24,7 @@ class ExtractDialog(QtWidgets.QDialog):
         self.genericGFXOffsetInput = QtWidgets.QSpinBox(self)
         self.genericGFXOffsetInput.setRange(0, 0x1FF)
         self.genericGFXOffsetInput.setDisplayIntegerBase(16)
+        self.genericCompressedGFXCheckBox = QtWidgets.QCheckBox(self)
         self.genericPalAddrInput = QtWidgets.QLineEdit(self)
         self.genericPalCountInput = QtWidgets.QSpinBox(self)
         self.genericPalCountInput.setRange(1, 8)
@@ -49,8 +50,9 @@ class ExtractDialog(QtWidgets.QDialog):
 
         genericForm = QtWidgets.QFormLayout(self)
         genericForm.addRow('GFX address', self.genericGFXAddrInput)
-        genericForm.addRow('GFX count in tiles', self.genericGFXSizeInput)
+        genericForm.addRow('GFX size in tiles', self.genericGFXSizeInput)
         genericForm.addRow('GFX offset in tiles', self.genericGFXOffsetInput)
+        genericForm.addRow('Compressed GFX (ignore size)', self.genericCompressedGFXCheckBox)
         genericForm.addRow('Palettes address', self.genericPalAddrInput)
         genericForm.addRow('Palette count', self.genericPalCountInput)
         genericForm.addRow('Palettes offset', self.genericPalOffsetInput)

@@ -1,5 +1,6 @@
 from src.romhandler import RomHandlerParent
 from src.gfx import add_to_canvas_from_spritemap, bounding_box, to_qimage
+from src.decompress import decompress
 import base64, os, struct
 
 def decode_spritemap_entry(entry):
@@ -23,8 +24,11 @@ def encode_spritemap_entry(entry):
         ((entry['tile'] & 0x100) >> 8) | ((entry['palette'] & 0b111) << 1) | ((entry['bg_priority'] & 0b11) << 4) | (0x40 * entry['h_flip']) | (0x80 * entry['v_flip'])
     )
 
-def extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, spritemap_start, name, spritemap_end=None):
-    gfx = rom.bulk_read_from_snes_address(gfx_addr, gfx_size*32)
+def extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, spritemap_start, name, spritemap_end=None, compressed_gfx=False):
+    if compressed_gfx:
+        gfx = decompress(rom, gfx_addr) # ignore size when gfx is compressed
+    else:
+        gfx = rom.bulk_read_from_snes_address(gfx_addr, gfx_size*32)
 
     palette555 = rom.read_from_snes_address(pal_addr, '2'*(16*pal_count))
     palette888 = [int.from_bytes([
