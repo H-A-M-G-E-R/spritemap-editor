@@ -182,7 +182,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     spritemap_end = int(self.extractDialog.genericSpritemapEndInput.text(), 16)
                 name = self.extractDialog.genericNameInput.text()
 
-                self.data = extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, spritemap_start, name, spritemap_end=None)
+                self.data = extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, spritemap_start, name, spritemap_end)
 
         self.stackedWidget.setCurrentIndex(0)
         self.updateDataTree()
