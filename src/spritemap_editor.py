@@ -1,14 +1,16 @@
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtCore import Qt, QPointF, QRectF, Signal, Slot
+from PySide6.QtGui import QIcon, QImage, QPen, QPixmap, QTransform
+from PySide6.QtWidgets import *
 from src.gfx import add_to_canvas_from_spritemap, to_qimage, convert_to_4bpp
 import base64, json, math
 
-class SpritePixmapItem(QtWidgets.QGraphicsPixmapItem):
+class SpritePixmapItem(QGraphicsPixmapItem):
     def __init__(self, listItem, editor):
         super().__init__()
         self.editor = editor
 
-        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
-        self.setFlag(QtWidgets.QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
 
         self.listItem = listItem
         listItem.pixmapItem = self
@@ -32,9 +34,9 @@ class SpritePixmapItem(QtWidgets.QGraphicsPixmapItem):
         image = to_qimage(canvas, self.editor.displayedPalettes[self.spriteData['palette']],
             0, 0, 16 if self.spriteData['big'] else 8, 16 if self.spriteData['big'] else 8)
 
-        self.setPixmap(QtGui.QPixmap.fromImage(image))
+        self.setPixmap(QPixmap.fromImage(image))
 
-class SpriteListItem(QtWidgets.QListWidgetItem):
+class SpriteListItem(QListWidgetItem):
     def __init__(self, text, parent, data, editor):
         super().__init__(text, parent)
 
@@ -43,7 +45,7 @@ class SpriteListItem(QtWidgets.QListWidgetItem):
         self.pixmapItem = SpritePixmapItem(self, editor)
         editor.spritemapScene.addItem(self.pixmapItem)
 
-class SpritemapScene(QtWidgets.QGraphicsScene):
+class SpritemapScene(QGraphicsScene):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -53,13 +55,13 @@ class SpritemapScene(QtWidgets.QGraphicsScene):
         painter.drawLine(0, rect.y()-2, 0, rect.y()+rect.height()+2)
 
     def	mousePressEvent(self, event):
-        QtWidgets.QGraphicsScene.mousePressEvent(self, event)
+        QGraphicsScene.mousePressEvent(self, event)
         if self.mouseGrabberItem() != None:
             self.parent.spriteList.setCurrentItem(self.mouseGrabberItem().listItem)
 
     def mouseMoveEvent(self, event):
         # Snap tiles to nearest pixel
-        QtWidgets.QGraphicsScene.mouseMoveEvent(self, event)
+        QGraphicsScene.mouseMoveEvent(self, event)
         if self.mouseGrabberItem() != None:
             for item in self.selectedItems():
                 item.setPos(math.floor(item.x()+0.5), math.floor(item.y()+0.5))
@@ -72,15 +74,15 @@ class SpritemapScene(QtWidgets.QGraphicsScene):
         # Move items with arrow keys
         x = 0
         y = 0
-        if event.key() == QtCore.Qt.Key_Left:
+        if event.key() == Qt.Key_Left:
             x = -1
-        if event.key() == QtCore.Qt.Key_Right:
+        if event.key() == Qt.Key_Right:
             x = 1
-        if event.key() == QtCore.Qt.Key_Up:
+        if event.key() == Qt.Key_Up:
             y = -1
-        if event.key() == QtCore.Qt.Key_Down:
+        if event.key() == Qt.Key_Down:
             y = 1
-        if event.modifiers() == QtCore.Qt.ShiftModifier:
+        if event.modifiers() == Qt.ShiftModifier:
             x *= 8
             y *= 8
         if x != 0 or y != 0:
@@ -92,16 +94,16 @@ class SpritemapScene(QtWidgets.QGraphicsScene):
             self.parent.updateCurrentSpriteChanged()
 
         # Copy
-        if event.modifiers() == QtCore.Qt.ControlModifier and event.key() == QtCore.Qt.Key_C:
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
             copiedData = []
             for item in self.items(): # the copied data needs to be sorted
                 if item.isSelected():
                     copiedData.append(item.spriteData)
-            QtWidgets.QApplication.clipboard().setText(json.dumps(copiedData))
+            QApplication.clipboard().setText(json.dumps(copiedData))
 
         # Paste
-        if event.modifiers() == QtCore.Qt.ControlModifier and event.key() == QtCore.Qt.Key_V:
-            pastedData = json.loads(QtWidgets.QApplication.clipboard().text())
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_V:
+            pastedData = json.loads(QApplication.clipboard().text())
             if len(pastedData) > 0:
                 for item in self.items():
                     item.setSelected(False)
@@ -118,12 +120,12 @@ class SpritemapScene(QtWidgets.QGraphicsScene):
                 self.parent.updateData()
 
         # Select all
-        if event.modifiers() == QtCore.Qt.ControlModifier and event.key() == QtCore.Qt.Key_A:
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_A:
             for item in self.items():
                 item.setSelected(True)
 
         # Delete selected
-        if event.key() == QtCore.Qt.Key_Delete:
+        if event.key() == Qt.Key_Delete:
             for item in self.selectedItems():
                 self.removeItem(item)
                 self.parent.spriteList.takeItem(self.parent.spriteList.indexFromItem(item.listItem).row())
@@ -132,7 +134,7 @@ class SpritemapScene(QtWidgets.QGraphicsScene):
             self.parent.fixSpriteListLabels()
             self.parent.updateData()
 
-class SpritemapView(QtWidgets.QGraphicsView):
+class SpritemapView(QGraphicsView):
     def __init__(self, scene, parent=None):
         super().__init__(scene, parent)
 
@@ -141,45 +143,45 @@ class SpritemapView(QtWidgets.QGraphicsView):
         self.ctrlPressed = False
 
     def keyPressEvent(self, event):
-        QtWidgets.QGraphicsView.keyPressEvent(self, event)
-        self.ctrlPressed = event.modifiers() == QtCore.Qt.ControlModifier
-        if self.ctrlPressed and event.key() == QtCore.Qt.Key_Equal:
+        QGraphicsView.keyPressEvent(self, event)
+        self.ctrlPressed = event.modifiers() == Qt.ControlModifier
+        if self.ctrlPressed and event.key() == Qt.Key_Equal:
             self.zoom += 1
-            self.setTransform(QtGui.QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
-        if self.ctrlPressed and event.key() == QtCore.Qt.Key_Minus:
+            self.setTransform(QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
+        if self.ctrlPressed and event.key() == Qt.Key_Minus:
             if self.zoom > 1:
                 self.zoom -= 1
-                self.setTransform(QtGui.QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
+                self.setTransform(QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
 
     def keyReleaseEvent(self, event):
-        QtWidgets.QGraphicsView.keyReleaseEvent(self, event)
-        self.ctrlPressed = event.modifiers() == QtCore.Qt.ControlModifier
+        QGraphicsView.keyReleaseEvent(self, event)
+        self.ctrlPressed = event.modifiers() == Qt.ControlModifier
 
     def wheelEvent(self, event):
         if self.ctrlPressed:
             self.zoom += event.angleDelta().y()//abs(event.angleDelta().y())
             if self.zoom < 1:
                 self.zoom = 1
-            self.setTransform(QtGui.QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
+            self.setTransform(QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
         else:
-            QtWidgets.QGraphicsView.wheelEvent(self, event)
+            QGraphicsView.wheelEvent(self, event)
 
-class SpriteList(QtWidgets.QListWidget):
+class SpriteList(QListWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
 
     def keyPressEvent(self, event):
-        QtWidgets.QListWidget.keyPressEvent(self, event)
+        QListWidget.keyPressEvent(self, event)
 
         # Copy
-        if event.modifiers() == QtCore.Qt.ControlModifier and event.key() == QtCore.Qt.Key_C:
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
             if self.currentItem() != None:
-                QtWidgets.QApplication.clipboard().setText(json.dumps([self.currentItem().spriteData]))
+                QApplication.clipboard().setText(json.dumps([self.currentItem().spriteData]))
 
         # Paste
-        if event.modifiers() == QtCore.Qt.ControlModifier and event.key() == QtCore.Qt.Key_V:
-            pastedData = json.loads(QtWidgets.QApplication.clipboard().text())
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_V:
+            pastedData = json.loads(QApplication.clipboard().text())
             if len(pastedData) > 0:
                 for item in self.parent.spritemapScene.items():
                     item.setSelected(False)
@@ -196,7 +198,7 @@ class SpriteList(QtWidgets.QListWidget):
                 self.parent.updateData()
 
         # Delete
-        if event.key() == QtCore.Qt.Key_Delete:
+        if event.key() == Qt.Key_Delete:
             if self.currentItem() != None:
                 self.parent.spritemapScene.removeItem(self.currentItem().pixmapItem)
                 self.takeItem(self.indexFromItem(self.currentItem()).row())
@@ -205,13 +207,13 @@ class SpriteList(QtWidgets.QListWidget):
                 self.parent.fixSpriteListLabels()
                 self.parent.updateData()
 
-class TileSelectorScene(QtWidgets.QGraphicsScene):
+class TileSelectorScene(QGraphicsScene):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
 
-        self.selection = QtWidgets.QGraphicsRectItem(0, 0, 8, 8)
-        self.selection.setPen(QtGui.QPen(0xFFFFFF))
+        self.selection = QGraphicsRectItem(0, 0, 8, 8)
+        self.selection.setPen(QPen(0xFFFFFF))
         self.selection.setZValue(1)
         self.selection.hide()
         self.addItem(self.selection)
@@ -222,7 +224,7 @@ class TileSelectorScene(QtWidgets.QGraphicsScene):
             tileIndex = data['tile']-self.parent.data['gfx_offset']
             tileSize = 8+8*data['big']
 
-            self.selection.setRect(QtCore.QRectF(tileIndex%16*8, tileIndex//16*8, tileSize, tileSize))
+            self.selection.setRect(QRectF(tileIndex%16*8, tileIndex//16*8, tileSize, tileSize))
             self.selection.show()
             self.selectionOriginX = 0
             self.selectionOriginY = 0
@@ -230,15 +232,15 @@ class TileSelectorScene(QtWidgets.QGraphicsScene):
             self.selection.hide()
 
     def	mousePressEvent(self, event):
-        QtWidgets.QGraphicsScene.mousePressEvent(self, event)
+        QGraphicsScene.mousePressEvent(self, event)
         if self.parent.spriteList.currentItem() != None:
             self.selectionOriginX = event.scenePos().x()
             self.selectionOriginY = event.scenePos().y()
-            self.selection.setRect(QtCore.QRectF(self.selectionOriginX//8*8, self.selectionOriginY//8*8, 8, 8))
+            self.selection.setRect(QRectF(self.selectionOriginX//8*8, self.selectionOriginY//8*8, 8, 8))
             self.selection.show()
     
     def mouseMoveEvent(self, event):
-        QtWidgets.QGraphicsScene.mouseMoveEvent(self, event)
+        QGraphicsScene.mouseMoveEvent(self, event)
         if self.parent.spriteList.currentItem() != None:
             if event.scenePos().x() > self.selectionOriginX:
                 x1 = math.floor(self.selectionOriginX/8)*8
@@ -273,10 +275,10 @@ class TileSelectorScene(QtWidgets.QGraphicsScene):
             elif abs(x1-x2) == 8 and abs(y1-y2) == 16:
                 y2 = y1+math.copysign(8, y2-y1)
 
-            self.selection.setRect(QtCore.QRectF(QtCore.QPointF(min(x1, x2), min(y1, y2)), QtCore.QPointF(max(x1, x2), max(y1, y2))))
+            self.selection.setRect(QRectF(QPointF(min(x1, x2), min(y1, y2)), QPointF(max(x1, x2), max(y1, y2))))
 
     def mouseReleaseEvent(self, event):
-        QtWidgets.QGraphicsScene.mouseReleaseEvent(self, event)
+        QGraphicsScene.mouseReleaseEvent(self, event)
         if self.parent.spriteList.currentItem() != None:
             data = self.parent.spriteList.currentItem().spriteData
             data['tile'] = int(self.selection.rect().x()//8+self.selection.rect().y()//8*16)+self.parent.data['gfx_offset']
@@ -284,7 +286,7 @@ class TileSelectorScene(QtWidgets.QGraphicsScene):
 
             self.parent.spriteList.currentItem().pixmapItem.updateImage()
 
-class SpritemapEditorWidget(QtWidgets.QWidget):
+class SpritemapEditorWidget(QWidget):
     def __init__(self, parent, data: dict):
         super().__init__(parent)
         self.parent = parent
@@ -293,22 +295,22 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         self.spritemapScene.selectionChanged.connect(self.spritemapSceneSelectionChanged)
         self.spritemapView = SpritemapView(self.spritemapScene)
         self.spritemapView.setSceneRect(-256, -128, 512, 256)
-        self.spritemapView.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+        self.spritemapView.setDragMode(QGraphicsView.RubberBandDrag)
 
-        newSpriteButton = QtWidgets.QPushButton('New')
-        newSpriteButton.setIcon(QtGui.QIcon.fromTheme(QtGui.QIcon.ThemeIcon.ListAdd))
+        newSpriteButton = QPushButton('New')
+        newSpriteButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListAdd))
         newSpriteButton.clicked.connect(self.newSpriteClicked)
-        deleteSpriteButton = QtWidgets.QPushButton('Delete')
-        deleteSpriteButton.setIcon(QtGui.QIcon.fromTheme(QtGui.QIcon.ThemeIcon.ListRemove))
+        deleteSpriteButton = QPushButton('Delete')
+        deleteSpriteButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListRemove))
         deleteSpriteButton.clicked.connect(self.deleteSpriteClicked)
-        moveSpriteUpButton = QtWidgets.QPushButton('Move up')
-        moveSpriteUpButton.setIcon(QtGui.QIcon.fromTheme(QtGui.QIcon.ThemeIcon.GoUp))
+        moveSpriteUpButton = QPushButton('Move up')
+        moveSpriteUpButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
         moveSpriteUpButton.clicked.connect(self.moveSpriteUpClicked)
-        moveSpriteDownButton = QtWidgets.QPushButton('Move down')
-        moveSpriteDownButton.setIcon(QtGui.QIcon.fromTheme(QtGui.QIcon.ThemeIcon.GoDown))
+        moveSpriteDownButton = QPushButton('Move down')
+        moveSpriteDownButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoDown))
         moveSpriteDownButton.clicked.connect(self.moveSpriteDownClicked)
 
-        editSpriteListRow = QtWidgets.QHBoxLayout()
+        editSpriteListRow = QHBoxLayout()
         editSpriteListRow.addWidget(newSpriteButton)
         editSpriteListRow.addWidget(deleteSpriteButton)
         editSpriteListRow.addWidget(moveSpriteUpButton)
@@ -319,53 +321,53 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         self.spriteList.currentItemChanged.connect(self.updateCurrentSpriteChanged)
 
         self.tileSelectorScene = TileSelectorScene(self)
-        self.tileSelectorView = QtWidgets.QGraphicsView(self.tileSelectorScene)
+        self.tileSelectorView = QGraphicsView(self.tileSelectorScene)
         self.tileSelectorView.setSceneRect(0, 0, 16*8, 1*8)
-        self.tileSelectorView.setFixedSize(16*8*4+6, 1*8*4+6)
-        self.tileSelectorView.scale(4, 4)
+        self.tileSelectorView.setFixedSize(16*8*3+6, 1*8*3+6)
+        self.tileSelectorView.scale(3, 3)
         self.tileSelectorImage = None
-        self.tileSelectorPixmap = QtWidgets.QGraphicsPixmapItem()
+        self.tileSelectorPixmap = QGraphicsPixmapItem()
         self.tileSelectorScene.addItem(self.tileSelectorPixmap)
 
-        loadTilesButton = QtWidgets.QPushButton('Load GFX')
+        loadTilesButton = QPushButton('Load GFX')
         loadTilesButton.clicked.connect(self.loadTilesClicked)
-        saveTilesButton = QtWidgets.QPushButton('Save GFX')
+        saveTilesButton = QPushButton('Save GFX')
         saveTilesButton.clicked.connect(self.saveTilesClicked)
 
-        loadSaveTiles = QtWidgets.QHBoxLayout()
+        loadSaveTiles = QHBoxLayout()
         loadSaveTiles.addWidget(loadTilesButton)
         loadSaveTiles.addWidget(saveTilesButton)
 
-        self.gfxOffsetSpinBox = QtWidgets.QSpinBox(self)
+        self.gfxOffsetSpinBox = QSpinBox(self)
         self.gfxOffsetSpinBox.setRange(0, 0x1FF)
         self.gfxOffsetSpinBox.setDisplayIntegerBase(16)
         self.gfxOffsetSpinBox.valueChanged.connect(self.gfxOffsetSpinBoxChanged)
-        self.paletteOffsetSpinBox = QtWidgets.QSpinBox(self)
+        self.paletteOffsetSpinBox = QSpinBox(self)
         self.paletteOffsetSpinBox.setRange(0, 7)
         self.paletteOffsetSpinBox.valueChanged.connect(self.paletteOffsetSpinBoxChanged)
 
-        gfxPropertiesForm = QtWidgets.QFormLayout()
+        gfxPropertiesForm = QFormLayout()
         gfxPropertiesForm.addRow('GFX offset', self.gfxOffsetSpinBox)
         gfxPropertiesForm.addRow('Palettes offset', self.paletteOffsetSpinBox)
 
-        self.xSpinBox = QtWidgets.QSpinBox(self)
+        self.xSpinBox = QSpinBox(self)
         self.xSpinBox.setRange(-0x100, 0xFF)
         self.xSpinBox.valueChanged.connect(self.xSpinBoxChanged)
-        self.ySpinBox = QtWidgets.QSpinBox(self)
+        self.ySpinBox = QSpinBox(self)
         self.ySpinBox.setRange(-0x80, 0x7F)
         self.ySpinBox.valueChanged.connect(self.ySpinBoxChanged)
-        self.paletteSpinBox = QtWidgets.QSpinBox(self)
+        self.paletteSpinBox = QSpinBox(self)
         self.paletteSpinBox.setRange(0, 7)
         self.paletteSpinBox.valueChanged.connect(self.paletteSpinBoxChanged)
-        self.prioritySpinBox = QtWidgets.QSpinBox(self)
+        self.prioritySpinBox = QSpinBox(self)
         self.prioritySpinBox.setRange(0, 3)
         self.prioritySpinBox.valueChanged.connect(self.prioritySpinBoxChanged)
-        self.hFlipCheckBox = QtWidgets.QCheckBox(self)
+        self.hFlipCheckBox = QCheckBox(self)
         self.hFlipCheckBox.checkStateChanged.connect(self.hFlipCheckBoxChanged)
-        self.vFlipCheckBox = QtWidgets.QCheckBox(self)
+        self.vFlipCheckBox = QCheckBox(self)
         self.vFlipCheckBox.checkStateChanged.connect(self.vFlipCheckBoxChanged)
 
-        spritePropertiesForm = QtWidgets.QFormLayout()
+        spritePropertiesForm = QFormLayout()
         spritePropertiesForm.addRow('X position', self.xSpinBox)
         spritePropertiesForm.addRow('Y position', self.ySpinBox)
         spritePropertiesForm.addRow('Palette', self.paletteSpinBox)
@@ -373,11 +375,11 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         spritePropertiesForm.addRow('H-flip', self.hFlipCheckBox)
         spritePropertiesForm.addRow('V-flip', self.vFlipCheckBox)
 
-        self.spritePropertiesFormBox = QtWidgets.QGroupBox('Properties')
+        self.spritePropertiesFormBox = QGroupBox('Properties')
         self.spritePropertiesFormBox.setLayout(spritePropertiesForm)
         self.spritePropertiesFormBox.setEnabled(False)
 
-        rightSide = QtWidgets.QVBoxLayout()
+        rightSide = QVBoxLayout()
         rightSide.addLayout(editSpriteListRow)
         rightSide.addWidget(self.spriteList)
         rightSide.addLayout(loadSaveTiles)
@@ -385,7 +387,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         rightSide.addWidget(self.tileSelectorView)
         rightSide.addWidget(self.spritePropertiesFormBox)
 
-        layout = QtWidgets.QHBoxLayout(self)
+        layout = QHBoxLayout(self)
         layout.addWidget(self.spritemapView)
         layout.addLayout(rightSide)
 
@@ -434,6 +436,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
 
         self.initialized = True
 
+    @Slot()
     def spritemapSceneSelectionChanged(self):
         if self.initialized: # needed to not throw an error when switching to a different spritemap with items selected
             for i in range(self.spriteList.count()):
@@ -442,6 +445,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                     self.spriteList.setCurrentItem(item)
                     break
 
+    @Slot()
     def newSpriteClicked(self):
         item = SpriteListItem(str(self.spriteList.count()), self.spriteList, {
             'x': 0,
@@ -455,6 +459,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         }, self)
         self.spriteListSelectItem(item)
 
+    @Slot()
     def deleteSpriteClicked(self):
         for item in self.spriteList.selectedItems():
             if item is self.spriteList.currentItem():
@@ -466,6 +471,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
         self.fixSpriteListLabels()
         self.updateData()
 
+    @Slot()
     def moveSpriteUpClicked(self):
         item = self.spriteList.currentItem()
         if item != None:
@@ -479,6 +485,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                 self.fixSpriteListLabels()
                 self.updateData()
 
+    @Slot()
     def moveSpriteDownClicked(self):
         item = self.spriteList.currentItem()
         if item != None:
@@ -492,6 +499,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                 self.fixSpriteListLabels()
                 self.updateData()
 
+    @Slot(SpriteListItem)
     def spriteListSelectItem(self, item):
         for pixmapItem in self.spritemapScene.items():
             pixmapItem.setSelected(False)
@@ -524,16 +532,16 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                 'v_flip': False
             }], self.tiles)
         self.tileSelectorImage = to_qimage(canvas, self.data['palette'], 0, 0, 16*8, (tileCount-1)//16*8+8)
-        self.tileSelectorPixmap.setPixmap(QtGui.QPixmap.fromImage(self.tileSelectorImage))
+        self.tileSelectorPixmap.setPixmap(QPixmap.fromImage(self.tileSelectorImage))
         self.tileSelectorView.setSceneRect(0, 0, 16*8, (tileCount-1)//16*8+8)
-        #self.tileSelectorView.setFixedSize(16*8*4+6, ((tileCount-1)//16*8+8)*4+6)
-        self.tileSelectorView.setMaximumHeight(((tileCount-1)//16*8+8)*4+6)
+        self.tileSelectorView.setMaximumHeight(((tileCount-1)//16*8+8)*3+6)
 
+    @Slot()
     def loadTilesClicked(self):
         if self.tileSelectorImage != None:
-            fileName = QtWidgets.QFileDialog.getOpenFileName(self, filter='PNG files (*.png)')[0]
+            fileName = QFileDialog.getOpenFileName(self, filter='PNG files (*.png)')[0]
             if fileName != '':
-                image = QtGui.QImage(fileName)
+                image = QImage(fileName)
                 self.tiles = convert_to_4bpp(image)
                 self.data['gfx'] = str(base64.b64encode(self.tiles), 'utf8')
                 self.data['palette'] = image.colorTable()
@@ -545,12 +553,14 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                 for item in self.spritemapScene.items():
                     item.updateImage()
 
+    @Slot()
     def saveTilesClicked(self):
         if self.tileSelectorImage != None:
-            fileName = QtWidgets.QFileDialog.getSaveFileName(self, filter='PNG files (*.png)')[0]
+            fileName = QFileDialog.getSaveFileName(self, filter='PNG files (*.png)')[0]
             if fileName != '':
                 self.tileSelectorImage.save(fileName)
 
+    @Slot()
     def updateCurrentSpriteChanged(self):
         self.tileSelectorScene.updateCurrentSpriteChanged()
         if self.spriteList.currentItem() != None:
@@ -560,22 +570,25 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
             self.ySpinBox.setValue(data['y'])
             self.paletteSpinBox.setValue(data['palette'])
             self.prioritySpinBox.setValue(data['bg_priority'])
-            self.hFlipCheckBox.setCheckState(QtCore.Qt.Checked if data['h_flip'] else QtCore.Qt.Unchecked)
-            self.vFlipCheckBox.setCheckState(QtCore.Qt.Checked if data['v_flip'] else QtCore.Qt.Unchecked)
+            self.hFlipCheckBox.setCheckState(Qt.Checked if data['h_flip'] else Qt.Unchecked)
+            self.vFlipCheckBox.setCheckState(Qt.Checked if data['v_flip'] else Qt.Unchecked)
         else:
             self.spritePropertiesFormBox.setEnabled(False)
 
+    @Slot(int)
     def gfxOffsetSpinBoxChanged(self, offset):
         self.data['gfx_offset'] = offset
         for item in self.spritemapScene.items():
             item.updateImage()
 
+    @Slot(int)
     def paletteOffsetSpinBoxChanged(self, offset):
         self.data['palette_offset'] = offset
         self.loadPalettesFromData()
         for item in self.spritemapScene.items():
             item.updateImage()
 
+    @Slot(int)
     def xSpinBoxChanged(self, x):
         if self.spriteList.currentItem() != None:
             data = self.spriteList.currentItem().spriteData
@@ -583,6 +596,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                 data['x'] = x
                 self.spriteList.currentItem().pixmapItem.setX(x)
 
+    @Slot(int)
     def ySpinBoxChanged(self, y):
         if self.spriteList.currentItem() != None:
             data = self.spriteList.currentItem().spriteData
@@ -590,6 +604,7 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                 data['y'] = y
                 self.spriteList.currentItem().pixmapItem.setY(y)
 
+    @Slot(int)
     def paletteSpinBoxChanged(self, palette):
         if self.spriteList.currentItem() != None:
             data = self.spriteList.currentItem().spriteData
@@ -597,23 +612,26 @@ class SpritemapEditorWidget(QtWidgets.QWidget):
                 data['palette'] = palette
                 self.spriteList.currentItem().pixmapItem.updateImage()
 
+    @Slot(int)
     def prioritySpinBoxChanged(self, priority):
         if self.spriteList.currentItem() != None:
             data = self.spriteList.currentItem().spriteData
             data['bg_priority'] = priority
 
+    @Slot(Qt.CheckState)
     def hFlipCheckBoxChanged(self, state):
         if self.spriteList.currentItem() != None:
             data = self.spriteList.currentItem().spriteData
-            checked = state == QtCore.Qt.Checked
+            checked = state == Qt.Checked
             if data['h_flip'] != checked:
                 data['h_flip'] = checked
                 self.spriteList.currentItem().pixmapItem.updateImage()
 
+    @Slot(Qt.CheckState)
     def vFlipCheckBoxChanged(self, state):
         if self.spriteList.currentItem() != None:
             data = self.spriteList.currentItem().spriteData
-            checked = state == QtCore.Qt.Checked
+            checked = state == Qt.Checked
             if data['v_flip'] != checked:
                 data['v_flip'] = checked
                 self.spriteList.currentItem().pixmapItem.updateImage()
