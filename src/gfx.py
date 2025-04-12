@@ -67,6 +67,8 @@ def to_qimage(canvas, palette, left, top, right, bottom):
     # add the pixels
     if canvas.keys():
         for (i, j), value in canvas.items():
+            if value < 0 or value >= len(palette): # check if color is oob, transparency if so
+                value = 0
             image.setPixel(i-left, j-top, value)
 
     return image

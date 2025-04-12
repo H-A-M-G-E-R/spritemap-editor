@@ -346,10 +346,14 @@ class SpritemapEditorWidget(QWidget):
         self.paletteOffsetSpinBox = QSpinBox(self)
         self.paletteOffsetSpinBox.setRange(0, 7)
         self.paletteOffsetSpinBox.valueChanged.connect(self.paletteOffsetSpinBoxChanged)
+        self.tileSelectorPaletteSpinBox = QSpinBox(self)
+        self.tileSelectorPaletteSpinBox.setRange(0, 7)
+        self.tileSelectorPaletteSpinBox.valueChanged.connect(self.tileSelectorPaletteSpinBoxChanged)
 
         gfxPropertiesForm = QFormLayout()
         gfxPropertiesForm.addRow('GFX offset', self.gfxOffsetSpinBox)
         gfxPropertiesForm.addRow('Palettes offset', self.paletteOffsetSpinBox)
+        gfxPropertiesForm.addRow('Palette in tile selector', self.tileSelectorPaletteSpinBox)
 
         self.xSpinBox = QSpinBox(self)
         self.xSpinBox.setRange(-0x100, 0xFF)
@@ -422,6 +426,7 @@ class SpritemapEditorWidget(QWidget):
         self.spritemapScene.clear()
         self.currentSpritemapData = spritemapData
         self.spriteList.clear()
+        self.tileSelectorPaletteSpinBox.setValue(self.data['palette_offset'])
         self.spritePropertiesFormBox.setEnabled(False)
 
         self.tiles = bytearray(base64.b64decode(bytes(self.data['gfx'], 'utf8')))
@@ -527,7 +532,7 @@ class SpritemapEditorWidget(QWidget):
                 'y': i//16*8,
                 'big': False,
                 'tile': i,
-                'palette': 0,
+                'palette': self.tileSelectorPaletteSpinBox.value()-self.data['palette_offset'],
                 'bg_priority': 2,
                 'h_flip': False,
                 'v_flip': False
@@ -588,6 +593,12 @@ class SpritemapEditorWidget(QWidget):
         self.loadPalettesFromData()
         for item in self.spritemapScene.items():
             item.updateImage()
+        self.updateTileSelector()
+
+    @Slot(int)
+    def tileSelectorPaletteSpinBoxChanged(self, palette):
+        if self.initialized:
+            self.updateTileSelector()
 
     @Slot(int)
     def xSpinBoxChanged(self, x):
