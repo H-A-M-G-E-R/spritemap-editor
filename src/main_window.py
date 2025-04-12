@@ -152,7 +152,7 @@ class MainWindow(QMainWindow):
         stackedWidgetDock.setFeatures(QDockWidget.DockWidgetMovable)
         self.addDockWidget(Qt.RightDockWidgetArea, stackedWidgetDock)
 
-        self.dataTree.itemSelectionChanged.connect(self.selectItem)
+        self.dataTree.currentItemChanged.connect(self.selectItem)
         self.dataTree.itemChanged.connect(self.renameItem)
 
     @Slot()
