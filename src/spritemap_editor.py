@@ -159,10 +159,11 @@ class SpritemapView(QGraphicsView):
 
     def wheelEvent(self, event):
         if self.ctrlPressed:
-            self.zoom += event.angleDelta().y()//abs(event.angleDelta().y())
-            if self.zoom < 1:
-                self.zoom = 1
-            self.setTransform(QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
+            if event.angleDelta().y() != 0:
+                self.zoom += event.angleDelta().y()//abs(event.angleDelta().y())
+                if self.zoom < 1:
+                    self.zoom = 1
+                self.setTransform(QTransform(self.zoom, 0, 0, self.zoom, 0, 0))
         else:
             QGraphicsView.wheelEvent(self, event)
 
