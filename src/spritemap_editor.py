@@ -54,11 +54,6 @@ class SpritemapScene(QGraphicsScene):
         painter.drawLine(rect.x()-2, 0, rect.x()+rect.width()+2, 0)
         painter.drawLine(0, rect.y()-2, 0, rect.y()+rect.height()+2)
 
-    def	mousePressEvent(self, event):
-        QGraphicsScene.mousePressEvent(self, event)
-        if self.mouseGrabberItem() != None:
-            self.parent.spriteList.setCurrentItem(self.mouseGrabberItem().listItem)
-
     def mouseMoveEvent(self, event):
         # Snap tiles to nearest pixel
         QGraphicsScene.mouseMoveEvent(self, event)
@@ -298,24 +293,24 @@ class SpritemapEditorWidget(QWidget):
         self.spritemapView.setSceneRect(-256, -128, 512, 256)
         self.spritemapView.setDragMode(QGraphicsView.RubberBandDrag)
 
-        newSpriteButton = QPushButton('New')
-        newSpriteButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListAdd))
-        newSpriteButton.clicked.connect(self.newSpriteClicked)
-        deleteSpriteButton = QPushButton('Delete')
-        deleteSpriteButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListRemove))
-        deleteSpriteButton.clicked.connect(self.deleteSpriteClicked)
-        moveSpriteUpButton = QPushButton('Move up')
-        moveSpriteUpButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
-        moveSpriteUpButton.clicked.connect(self.moveSpriteUpClicked)
-        moveSpriteDownButton = QPushButton('Move down')
-        moveSpriteDownButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoDown))
-        moveSpriteDownButton.clicked.connect(self.moveSpriteDownClicked)
+        newButton = QPushButton('New')
+        newButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListAdd))
+        newButton.clicked.connect(self.newClicked)
+        deleteButton = QPushButton('Delete')
+        deleteButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListRemove))
+        deleteButton.clicked.connect(self.deleteClicked)
+        moveUpButton = QPushButton('Move up')
+        moveUpButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
+        moveUpButton.clicked.connect(self.moveUpClicked)
+        moveDownButton = QPushButton('Move down')
+        moveDownButton.setIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoDown))
+        moveDownButton.clicked.connect(self.moveDownClicked)
 
         editSpriteListRow = QHBoxLayout()
-        editSpriteListRow.addWidget(newSpriteButton)
-        editSpriteListRow.addWidget(deleteSpriteButton)
-        editSpriteListRow.addWidget(moveSpriteUpButton)
-        editSpriteListRow.addWidget(moveSpriteDownButton)
+        editSpriteListRow.addWidget(newButton)
+        editSpriteListRow.addWidget(deleteButton)
+        editSpriteListRow.addWidget(moveUpButton)
+        editSpriteListRow.addWidget(moveDownButton)
 
         self.spriteList = SpriteList(self)
         self.spriteList.itemPressed.connect(self.spriteListSelectItem)
@@ -452,7 +447,7 @@ class SpritemapEditorWidget(QWidget):
                     break
 
     @Slot()
-    def newSpriteClicked(self):
+    def newClicked(self):
         item = SpriteListItem(str(self.spriteList.count()), self.spriteList, {
             'x': 0,
             'y': 0,
@@ -464,9 +459,10 @@ class SpritemapEditorWidget(QWidget):
             'v_flip': False
         }, self)
         self.spriteListSelectItem(item)
+        self.updateData()
 
     @Slot()
-    def deleteSpriteClicked(self):
+    def deleteClicked(self):
         for item in self.spriteList.selectedItems():
             if item is self.spriteList.currentItem():
                 self.spriteList.setCurrentItem(None)
@@ -478,7 +474,7 @@ class SpritemapEditorWidget(QWidget):
         self.updateData()
 
     @Slot()
-    def moveSpriteUpClicked(self):
+    def moveUpClicked(self):
         item = self.spriteList.currentItem()
         if item != None:
             index = self.spriteList.indexFromItem(item).row()
@@ -492,7 +488,7 @@ class SpritemapEditorWidget(QWidget):
                 self.updateData()
 
     @Slot()
-    def moveSpriteDownClicked(self):
+    def moveDownClicked(self):
         item = self.spriteList.currentItem()
         if item != None:
             index = self.spriteList.indexFromItem(item).row()
