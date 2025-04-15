@@ -8,11 +8,11 @@ from src.extract_export import extract_generic, extract_enemy, export_to_asm, ex
 from src.romhandler import RomHandlerParent
 import base64, bz2, json, math, sys
 
-class SpritemapTreeItem(QTreeWidgetItem):
+class DataLeaf(QTreeWidgetItem):
     def __init__(self, parent, data):
         super().__init__(parent, [data['name']])
 
-        self.spritemapData = data
+        self.datas = data
 
 class DataTree(QTreeWidget):
     def __init__(self, parent):
@@ -25,22 +25,31 @@ class DataTree(QTreeWidget):
         # Copy
         if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
             if self.currentItem() != None:
-                if isinstance(self.currentItem(), SpritemapTreeItem):
-                    QApplication.clipboard().setText(json.dumps(self.currentItem().spritemapData))
+                item = self.currentItem()
+                if item.parent() is self.parent.spritemaps or item.parent() is self.parent.ext_hitboxes or item.parent() is self.parent.ext_spritemaps:
+                    QApplication.clipboard().setText(json.dumps(item.datas))
         
         # Paste
         if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_V:
-            pastedData = json.loads(QApplication.clipboard().text())
-            if self.currentItem() is self.parent.spritemaps or isinstance(self.currentItem(), SpritemapTreeItem):
-                item = SpritemapTreeItem(self.parent.spritemaps, pastedData)
-                item.setFlags(item.flags() | Qt.ItemIsEditable)
-                self.setCurrentItem(item)
+            if self.currentItem() != None:
+                item = self.currentItem()
+                pastedData = json.loads(QApplication.clipboard().text())
+                if item is self.parent.spritemaps or item.parent() is self.parent.spritemaps:
+                    item = DataLeaf(self.parent.spritemaps, pastedData)
+                    item.setFlags(item.flags() | Qt.ItemIsEditable)
+                    self.setCurrentItem(item)
+                elif item is self.parent.ext_hitboxes or item.parent() is self.parent.ext_hitboxes:
+                    item = DataLeaf(self.parent.ext_hitboxes, pastedData)
+                    item.setFlags(item.flags() | Qt.ItemIsEditable)
+                    self.setCurrentItem(item)
+                elif item is self.parent.ext_spritemaps or item.parent() is self.parent.ext_spritemaps:
+                    item = DataLeaf(self.parent.ext_spritemaps, pastedData)
+                    item.setFlags(item.flags() | Qt.ItemIsEditable)
+                    self.setCurrentItem(item)
         
         # Delete
         if event.key() == Qt.Key_Delete:
-            if self.currentItem() != None:
-                if isinstance(self.currentItem(), SpritemapTreeItem):
-                    self.parent.spritemaps.removeChild(self.currentItem())
+            self.parent.deleteClicked()
 
 class MainWindow(QMainWindow):
     def __init__(self, fp=None, parent=None):
@@ -48,6 +57,7 @@ class MainWindow(QMainWindow):
 
         if fp != None:
             self.data = json.load(open(fp, 'r'))
+            self.updateOldData()
         else:
             self.data = data = {
                 'game': 'sm',
@@ -57,8 +67,8 @@ class MainWindow(QMainWindow):
                 'gfx_offset': 0,
                 'palette_offset': 0,
                 'spritemaps': [],
-                'extended_hitboxes': None,
-                'extended_spritemaps': None
+                'ext_hitboxes': [],
+                'ext_spritemaps': []
             }
 
         newButton = QPushButton('New')
@@ -162,17 +172,22 @@ class MainWindow(QMainWindow):
     @Slot()
     def extractDialogAccepted(self):
         rom = RomHandlerParent(self.extractDialog.romInput.text())
+
+        def int_or_none(text):
+            return None if text == '' else int(text, 16)
+
         match self.extractDialog.tabWidget.currentIndex():
             case 0:
                 enemy_id = int(self.extractDialog.enemyIDInput.text(), 16)
                 spritemap_start = int(self.extractDialog.enemySpritemapStartInput.text(), 16)
-                if self.extractDialog.enemySpritemapEndInput.text() == '':
-                    spritemap_end = None
-                else:
-                    spritemap_end = int(self.extractDialog.enemySpritemapEndInput.text(), 16)
+                spritemap_end = int_or_none(self.extractDialog.enemySpritemapEndInput.text())
+                ext_hitbox_start = int_or_none(self.extractDialog.enemyExtHitboxStartInput.text())
+                ext_hitbox_end = int_or_none(self.extractDialog.enemyExtHitboxEndInput.text())
+                ext_spritemap_start = int_or_none(self.extractDialog.enemyExtSpritemapStartInput.text())
+                ext_spritemap_end = int_or_none(self.extractDialog.enemyExtSpritemapEndInput.text())
                 name = self.extractDialog.enemyNameInput.text()
 
-                self.data = extract_enemy(rom, enemy_id, spritemap_start, name, spritemap_end)
+                self.data = extract_enemy(rom, enemy_id, (spritemap_start, spritemap_end), (ext_hitbox_start, ext_hitbox_end), (ext_spritemap_start, ext_spritemap_end), name)
             case 1:
                 gfx_addr = int(self.extractDialog.genericGFXAddrInput.text(), 16)
                 gfx_size = self.extractDialog.genericGFXSizeInput.value()
@@ -182,13 +197,14 @@ class MainWindow(QMainWindow):
                 pal_count = self.extractDialog.genericPalCountInput.value()
                 pal_offset = self.extractDialog.genericPalOffsetInput.value()
                 spritemap_start = int(self.extractDialog.genericSpritemapStartInput.text(), 16)
-                if self.extractDialog.genericSpritemapEndInput.text() == '':
-                    spritemap_end = None
-                else:
-                    spritemap_end = int(self.extractDialog.genericSpritemapEndInput.text(), 16)
+                spritemap_end = int_or_none(self.extractDialog.genericSpritemapEndInput.text())
+                ext_hitbox_start = int_or_none(self.extractDialog.genericExtHitboxStartInput.text())
+                ext_hitbox_end = int_or_none(self.extractDialog.genericExtHitboxEndInput.text())
+                ext_spritemap_start = int_or_none(self.extractDialog.genericExtSpritemapStartInput.text())
+                ext_spritemap_end = int_or_none(self.extractDialog.genericExtSpritemapEndInput.text())
                 name = self.extractDialog.genericNameInput.text()
 
-                self.data = extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, spritemap_start, name, spritemap_end, compressed_gfx)
+                self.data = extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pal_offset, (spritemap_start, spritemap_end), (ext_hitbox_start, ext_hitbox_end), (ext_spritemap_start, ext_spritemap_end), name, compressed_gfx)
 
         self.updateDataTree()
         self.stackedWidget.setCurrentIndex(0)
@@ -199,6 +215,7 @@ class MainWindow(QMainWindow):
         fileName = QFileDialog.getOpenFileName(self, filter='JSON files (*.json)')[0]
         if fileName != '':
             self.data = json.load(open(fileName, 'r'))
+            self.updateOldData()
             self.updateDataTree()
             self.stackedWidget.setCurrentIndex(0)
             self.spritemapEditor.loadData(self.data)
@@ -235,12 +252,24 @@ class MainWindow(QMainWindow):
             self.updateData()
             export_to_png(self.data, directory)
 
+    def updateOldData(self):
+        ''' Update data from previous versions'''
+
+        if 'extended_hitboxes' in self.data:
+            del self.data['extended_hitboxes']
+            self.data['ext_hitboxes'] = []
+        if 'extended_spritemaps' in self.data:
+            del self.data['extended_spritemaps']
+            self.data['ext_spritemaps'] = []
+
     def updateData(self):
         self.data['spritemaps'] = []
         for i in range(self.spritemaps.childCount()):
-            self.data['spritemaps'].append(self.spritemaps.child(i).spritemapData)
+            self.data['spritemaps'].append(self.spritemaps.child(i).datas)
 
     def updateDataTree(self):
+        self.initialized = False
+
         self.dataTree.clear()
         self.dataGroup = QTreeWidgetItem(self.dataTree, [self.data['name']])
         self.dataGroup.setExpanded(True)
@@ -249,60 +278,115 @@ class MainWindow(QMainWindow):
         self.spritemaps = QTreeWidgetItem(self.dataGroup, ['Spritemaps'])
         self.spritemaps.setExpanded(True)
         for spritemap in self.data['spritemaps']:
-            item = SpritemapTreeItem(self.spritemaps, spritemap)
+            item = DataLeaf(self.spritemaps, spritemap)
             item.setFlags(item.flags() | Qt.ItemIsEditable)
+
+        self.ext_hitboxes = QTreeWidgetItem(self.dataGroup, ['Extended hitboxes'])
+        self.ext_hitboxes.setExpanded(True)
+        for hitbox in self.data['ext_hitboxes']:
+            item = DataLeaf(self.ext_hitboxes, hitbox)
+            item.setFlags(item.flags() | Qt.ItemIsEditable)
+
+        self.ext_spritemaps = QTreeWidgetItem(self.dataGroup, ['Extended spritemaps'])
+        self.ext_spritemaps.setExpanded(True)
+        for spritemap in self.data['ext_spritemaps']:
+            item = DataLeaf(self.ext_spritemaps, spritemap)
+            item.setFlags(item.flags() | Qt.ItemIsEditable)
+
+        self.initialized = True
 
     @Slot()
     def selectItem(self):
-        if isinstance(self.dataTree.currentItem(), SpritemapTreeItem):
-            self.stackedWidget.setCurrentIndex(1)
-            self.spritemapEditor.updateSpritemapChanged(self.dataTree.currentItem().spritemapData)
-        else:
-            self.stackedWidget.setCurrentIndex(0)
+        if self.dataTree.currentItem() != None:
+            if self.dataTree.currentItem().parent() is self.spritemaps:
+                self.stackedWidget.setCurrentIndex(1)
+                self.spritemapEditor.updateSpritemapChanged(self.dataTree.currentItem().datas)
+            else:
+                self.stackedWidget.setCurrentIndex(0)
 
     @Slot(QTreeWidgetItem, int)
     def renameItem(self, item, column):
-        if column == 0:
+        if self.initialized and column == 0:
             if item is self.dataGroup:
                 self.data['name'] = item.text(0)
-            elif isinstance(item, SpritemapTreeItem):
-                item.spritemapData['name'] = item.text(0)
+            elif item.parent() is self.spritemaps:
+                for h in self.data['ext_hitboxes']:
+                    if h['spritemap'] == item.datas['name']:
+                        h['spritemap'] = item.text(0)
+                for e in self.data['ext_spritemaps']:
+                    for s in e['ext_spritemap']:
+                        if s['spritemap'] == item.datas['name']:
+                            s['spritemap'] = item.text(0)
+                item.datas['name'] = item.text(0)
 
     @Slot()
     def newClicked(self):
-        if self.dataTree.currentItem() is self.spritemaps or isinstance(self.dataTree.currentItem(), SpritemapTreeItem):
-            data = {
-                'name': 'New spritemap',
-                'spritemap': []
-            }
-            item = SpritemapTreeItem(self.spritemaps, data)
-            item.setFlags(item.flags() | Qt.ItemIsEditable)
-            self.dataTree.setCurrentItem(item)
+        if self.dataTree.currentItem() != None:
+            if self.dataTree.currentItem() is self.spritemaps or self.dataTree.currentItem().parent() is self.spritemaps:
+                data = {
+                    'name': 'NewSpritemap',
+                    'spritemap': []
+                }
+                item = DataLeaf(self.spritemaps, data)
+                item.setFlags(item.flags() | Qt.ItemIsEditable)
+                self.dataTree.setCurrentItem(item)
+            elif self.dataTree.currentItem() is self.ext_hitboxes or self.dataTree.currentItem().parent() is self.ext_hitboxes:
+                data = {
+                    'name': 'NewHitbox',
+                    'spritemap': None,
+                    'hitbox': []
+                }
+                item = DataLeaf(self.ext_hitboxes, data)
+                item.setFlags(item.flags() | Qt.ItemIsEditable)
+                self.dataTree.setCurrentItem(item)
+            elif self.dataTree.currentItem() is self.ext_spritemaps or self.dataTree.currentItem().parent() is self.ext_spritemaps:
+                data = {
+                    'name': 'NewExtSpritemap',
+                    'ext_spritemap': []
+                }
+                item = DataLeaf(self.ext_spritemaps, data)
+                item.setFlags(item.flags() | Qt.ItemIsEditable)
+                self.dataTree.setCurrentItem(item)
 
     @Slot()
     def deleteClicked(self):
-        if isinstance(self.dataTree.currentItem(), SpritemapTreeItem):
-            self.spritemaps.removeChild(self.dataTree.currentItem())
+        if self.dataTree.currentItem() != None:
+            item = self.dataTree.currentItem()
+            if item.parent() is self.spritemaps:
+                for h in self.data['ext_hitboxes']:
+                    if h['spritemap'] == item.datas['name']:
+                        h['spritemap'] = None
+                for e in self.data['ext_spritemaps']:
+                    for s in e['ext_spritemap']:
+                        if s['spritemap'] == item.datas['name']:
+                            s['spritemap'] = None
+                item.parent().removeChild(item)
+            elif item.parent() is self.ext_hitboxes or item.parent() is self.ext_spritemaps:
+                item.parent().removeChild(item)
 
     @Slot()
     def moveUpClicked(self):
-        if isinstance(self.dataTree.currentItem(), SpritemapTreeItem):
+        if self.dataTree.currentItem() != None:
             item = self.dataTree.currentItem()
-            index = self.spritemaps.indexOfChild(item)
-            if index > 0:
-                self.spritemaps.removeChild(item)
-                self.spritemaps.insertChild(index-1, item)
-                self.dataTree.setCurrentItem(item)
+            parent = item.parent()
+            if parent is self.spritemaps or parent is self.ext_hitboxes or parent is self.ext_spritemaps:
+                index = parent.indexOfChild(item)
+                if index > 0:
+                    parent.removeChild(item)
+                    parent.insertChild(index-1, item)
+                    self.dataTree.setCurrentItem(item)
 
     @Slot()
     def moveDownClicked(self):
-        if isinstance(self.dataTree.currentItem(), SpritemapTreeItem):
+        if self.dataTree.currentItem() != None:
             item = self.dataTree.currentItem()
-            index = self.spritemaps.indexOfChild(item)
-            if index < self.spritemaps.childCount()-1:
-                self.spritemaps.removeChild(item)
-                self.spritemaps.insertChild(index+1, item)
-                self.dataTree.setCurrentItem(item)
+            parent = item.parent()
+            if parent is self.spritemaps or parent is self.ext_hitboxes or parent is self.ext_spritemaps:
+                index = parent.indexOfChild(item)
+                if index < parent.childCount()-1:
+                    parent.removeChild(item)
+                    parent.insertChild(index+1, item)
+                    self.dataTree.setCurrentItem(item)
 
     @Slot()
     def hFlipTriggered(self):

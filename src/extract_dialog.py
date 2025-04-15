@@ -17,6 +17,10 @@ class ExtractDialog(QDialog):
         self.enemyIDInput = QLineEdit('0xCEBF', self)
         self.enemySpritemapStartInput = QLineEdit('0xA288DA', self)
         self.enemySpritemapEndInput = QLineEdit(self)
+        self.enemyExtHitboxStartInput = QLineEdit(self)
+        self.enemyExtHitboxEndInput = QLineEdit(self)
+        self.enemyExtSpritemapStartInput = QLineEdit(self)
+        self.enemyExtSpritemapEndInput = QLineEdit(self)
         self.enemyNameInput = QLineEdit('Boyon', self)
 
         self.genericGFXAddrInput = QLineEdit(self)
@@ -34,6 +38,10 @@ class ExtractDialog(QDialog):
         self.genericPalOffsetInput.setRange(0, 7)
         self.genericSpritemapStartInput = QLineEdit(self)
         self.genericSpritemapEndInput = QLineEdit(self)
+        self.genericExtHitboxStartInput = QLineEdit(self)
+        self.genericExtHitboxEndInput = QLineEdit(self)
+        self.genericExtSpritemapStartInput = QLineEdit(self)
+        self.genericExtSpritemapEndInput = QLineEdit(self)
         self.genericNameInput = QLineEdit(self)
 
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -45,6 +53,10 @@ class ExtractDialog(QDialog):
         enemyForm.addRow('Enemy ID', self.enemyIDInput)
         enemyForm.addRow('Spritemaps start', self.enemySpritemapStartInput)
         enemyForm.addRow('Spritemaps end (leave it blank to autodetect)', self.enemySpritemapEndInput)
+        enemyForm.addRow('Extended hitboxes start (leave it blank to skip)', self.enemyExtHitboxStartInput)
+        enemyForm.addRow('Extended hitboxes end (leave it blank to autodetect)', self.enemyExtHitboxEndInput)
+        enemyForm.addRow('Extended spritemaps start (leave it blank to skip)', self.enemyExtSpritemapStartInput)
+        enemyForm.addRow('Extended spritemaps end (leave it blank to autodetect)', self.enemyExtSpritemapEndInput)
         enemyForm.addRow('Name', self.enemyNameInput)
 
         enemyFormWidget = QWidget(self)
@@ -60,6 +72,10 @@ class ExtractDialog(QDialog):
         genericForm.addRow('Palettes offset', self.genericPalOffsetInput)
         genericForm.addRow('Spritemaps start', self.genericSpritemapStartInput)
         genericForm.addRow('Spritemaps end (leave it blank to autodetect)', self.genericSpritemapEndInput)
+        genericForm.addRow('Extended hitboxes start (leave it blank to skip)', self.genericExtHitboxStartInput)
+        genericForm.addRow('Extended hitboxes end (leave it blank to autodetect)', self.genericExtHitboxEndInput)
+        genericForm.addRow('Extended spritemaps start (leave it blank to skip)', self.genericExtSpritemapStartInput)
+        genericForm.addRow('Extended spritemaps end (leave it blank to autodetect)', self.genericExtSpritemapEndInput)
         genericForm.addRow('Name', self.genericNameInput)
 
         genericFormWidget = QWidget(self)
