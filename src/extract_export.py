@@ -190,19 +190,22 @@ def export_to_asm(data, folder_name):
         file.write(f'\n{spritemap['name']}:\n')
         file.write(f'dw ${len(spritemap['spritemap']):04X}')
         if len(spritemap['spritemap']) > 0:
-            file.write(' : db ' + ', '.join(','.join(f'${b:02X}' for b in encode_spritemap_entry(entry)) for entry in spritemap['spritemap']) + '\n')
+            file.write(' : db ' + ', '.join(','.join(f'${b:02X}' for b in encode_spritemap_entry(entry)) for entry in spritemap['spritemap']))
+        file.write('\n')
 
     for hitbox in data['ext_hitboxes']:
         file.write(f'\n{hitbox['name']}:\n')
         file.write(f'dw ${len(hitbox['hitbox']):04X}')
         if len(hitbox['hitbox']) > 0:
-            file.write(', ' + ', '.join(f'{entry['left']},{entry['top']},{entry['right']},{entry['bottom']},{entry['touch']},{entry['shot']}' for entry in hitbox['hitbox']) + '\n')
+            file.write(', ' + ', '.join(f'{entry['left']},{entry['top']},{entry['right']},{entry['bottom']},{entry['touch']},{entry['shot']}' for entry in hitbox['hitbox']))
+        file.write('\n')
 
     for ext_spritemap in data['ext_spritemaps']:
         file.write(f'\n{ext_spritemap['name']}:\n')
         file.write(f'dw ${len(ext_spritemap['ext_spritemap']):04X}')
         if len(ext_spritemap['ext_spritemap']) > 0:
-            file.write(', ' + ', '.join(f'{entry['x']},{entry['y']},{entry['spritemap']},{entry['hitbox']}' for entry in ext_spritemap['ext_spritemap']) + '\n')
+            file.write(', ' + ', '.join(f'{entry['x']},{entry['y']},{entry['spritemap']},{entry['hitbox']}' for entry in ext_spritemap['ext_spritemap']))
+        file.write('\n')
     
     file = open(os.path.join(folder_name, data['name']+'.gfx') , 'wb')
     file.write(base64.b64decode(bytes(data['gfx'], 'utf8')))
