@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, QPointF, QRectF, Signal, Slot
 from PySide6.QtGui import QIcon, QImage, QPen, QPixmap, QTransform
 from PySide6.QtWidgets import *
-from src.gfx import add_to_canvas_from_spritemap, to_qimage, convert_to_4bpp
+from src.gfx import add_to_canvas_from_spritemap, to_qimage, convert_4bpp_to_image, convert_to_4bpp
 import base64, json, math
 
 class SpritePixmapItem(QGraphicsPixmapItem):
@@ -520,20 +520,9 @@ class SpritemapEditorWidget(QWidget):
             z -= 1
 
     def updateTileSelector(self):
-        canvas = {}
         tileCount = len(self.tiles)//32
-        for i in range(tileCount):
-            add_to_canvas_from_spritemap(canvas, [{
-                'x': i%16*8,
-                'y': i//16*8,
-                'big': False,
-                'tile': i,
-                'palette': self.tileSelectorPaletteSpinBox.value()-self.data['palette_offset'],
-                'bg_priority': 2,
-                'h_flip': False,
-                'v_flip': False
-            }], self.tiles)
-        self.tileSelectorImage = to_qimage(canvas, self.data['palette'], 0, 0, 16*8, (tileCount-1)//16*8+8)
+
+        self.tileSelectorImage = convert_4bpp_to_image(self.tiles, self.data['palette'])
         self.tileSelectorPixmap.setPixmap(QPixmap.fromImage(self.tileSelectorImage))
         self.tileSelectorView.setSceneRect(0, 0, 16*8, (tileCount-1)//16*8+8)
         self.tileSelectorView.setMaximumHeight(((tileCount-1)//16*8+8)*3+6)

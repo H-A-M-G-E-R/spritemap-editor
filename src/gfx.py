@@ -91,6 +91,13 @@ def convert_tile_from_bitplanes(raw_tile):
     returnvalue = fixed_bits.reshape(8, 8)
     return returnvalue
 
+def convert_4bpp_to_image(raw, palette):
+    raveled = np.ravel(np.concatenate([np.concatenate([convert_tile_from_bitplanes(raw[(i+j)*0x20:(i+j+1)*0x20]) for i in range(0x10)], 1) for j in range(0, len(raw)//0x20, 0x10)], 0))
+
+    image = QImage(raveled, 0x80, 8*len(raw)//0x200, QImage.Format_Indexed8)
+    image.setColorTable(palette)
+    return image
+
 def convert_to_4bpp(image):
     '''Converts a QImage to SNES 4bpp tiles as bytearray'''
     if image.format() != QImage.Format_Indexed8:
