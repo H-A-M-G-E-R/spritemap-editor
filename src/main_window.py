@@ -62,8 +62,8 @@ class MainWindow(QMainWindow):
             self.data = data = {
                 'game': 'sm',
                 'name': 'NewProject',
-                'gfx': '',
-                'palette': [0]*16,
+                'gfx': str(base64.b64encode(b'\0'*0x400), 'utf8'),
+                'palette': [0xFF000000]*16,
                 'gfx_offset': 0,
                 'palette_offset': 0,
                 'spritemaps': [],

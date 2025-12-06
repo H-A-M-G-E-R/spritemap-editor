@@ -57,7 +57,7 @@ def extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pa
             spritemap.append(decode_spritemap_entry(rom.bulk_read_from_snes_address(curr_addr+2+i*5, 5)))
 
         spritemaps.append({
-            'name': f'{name}Spritemap_{spritemap_i:X}_{curr_addr:06X}',
+            'name': f'{name}Spritemap_{spritemap_i}_{curr_addr:06X}',
             'spritemap': spritemap
         })
         curr_addr += 2+count*5
@@ -94,7 +94,7 @@ def extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pa
                 break
 
             ext_hitboxes.append({
-                'name': f'{name}Hitbox_{hitbox_i:X}_{curr_addr:06X}',
+                'name': f'{name}Hitbox_{hitbox_i}_{curr_addr:06X}',
                 'spritemap': None,
                 'hitbox': hitbox
             })
@@ -154,7 +154,7 @@ def extract_generic(rom, gfx_addr, gfx_size, gfx_offset, pal_addr, pal_count, pa
                 break
 
             ext_spritemaps.append({
-                'name': f'{name}ExtSpritemap_{ext_spritemap_i:X}_{curr_addr:06X}',
+                'name': f'{name}ExtSpritemap_{ext_spritemap_i}_{curr_addr:06X}',
                 'ext_spritemap': ext_spritemap
             })
             curr_addr += 2+count*8
