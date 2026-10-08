@@ -32,7 +32,7 @@ Run:
 ![Image](image.png)
 
 ## Useful tools & resources
-I recommend [LibreSprite](https://github.com/LibreSprite/LibreSprite) to create new graphics.
+I recommend Aseprite or [LibreSprite](https://github.com/LibreSprite/LibreSprite) to create new graphics.
 
 ASM files can be compiled using [Asar](https://github.com/RPGHacker/asar)
 
